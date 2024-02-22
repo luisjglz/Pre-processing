@@ -5,7 +5,7 @@ Este github contiene el pre-procesing para lemantización de PDFs y de jsonl.
 
 - [@sofhdez](https://github.com/sofhdez)
 - [@AbielBorja](https://github.com/AbielBorja)
-## JSONL Lemantizado
+## JSONL Lematizado
 
 A continuación se explica el procesamiento de lemantización de los jsonl.
 
