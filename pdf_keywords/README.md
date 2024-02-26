@@ -33,7 +33,7 @@ Para utilizar este script, sigue los pasos a continuación:
 3. Ejecuta el script desde la línea de comandos, especificando la ruta al archivo JSON, el directorio de los PDFs, la ruta al archivo de salida donde se guardarán las oraciones encontradas, y opcionalmente, el número de palabras antes y después de la palabra clave que deseas incluir en la extracción. Aquí tienes un ejemplo de cómo ejecutar el script:
 
 ```bash
-python script.py /ruta/al/archivo/keywords.json /ruta/al/directorio/pdfs /ruta/al/archivo/salida.txt -n 5
+python generateTxt.py /ruta/al/archivo/keywords.json /ruta/al/directorio/pdfs /ruta/al/archivo/salida.txt -n 5
 ```
 
 ## Argumentos

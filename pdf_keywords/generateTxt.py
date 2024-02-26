@@ -70,4 +70,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# python script.py /path/to/your/keywords.json /path/to/your/pdfs/ /path/to/your/output.txt -n 5
+# python generateTxt.py /path/to/your/keywords.json /path/to/your/pdfs/ /path/to/your/output.txt -n 5
