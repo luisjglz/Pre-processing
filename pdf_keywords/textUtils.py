@@ -1,78 +1,81 @@
+import argparse
 import jsonlines
-from num2words import num2words
-import contractions
-from spellchecker import SpellChecker
-from unidecode import unidecode
-import spacy
 import re
 from tqdm import tqdm
 
-# Load Spacy model for lemmatization
-nlp = spacy.load("en_core_web_lg")
-spell = SpellChecker()
 
-
-def word_lemmatizer(text):
-    doc = nlp(text)
-    return ' '.join([token.lemma_ for token in doc])
-
-
-def convert_numbers_to_words(text):
-    return ' '.join([num2words(word) if word.isdigit() else word for word in text.split()])
-
-
-def expand_contractions(text):
-    return contractions.fix(text)
-
-
-def convert_emojis_to_words(text):
-    return text.encode('ascii', 'ignore').decode('ascii')
-
-
-def convert_accented_to_ascii(text):
-    return unidecode(text)
-
-
-def correct_spelling(text):
-    corrected_words = [spell.correction(word) for word in text.split()]
-    return ' '.join(corrected_words)
-
-
-def clean_text(text):
-    text = expand_contractions(text)
-    text = convert_accented_to_ascii(text)
-    text = convert_emojis_to_words(text)
-    text = convert_numbers_to_words(text)
+def remove_unwanted_characters(text):
+    # Remove URLs more aggressively
+    text = re.sub(r'https?://\S+|www\.\S+', '', text)
+    # Remove any remaining URL parts
+    text = re.sub(r'\S+\.\S+', '', text)
+    # Remove \ and unicode characters
+    text = re.sub(r'\\u[\dA-Fa-f]{4}', '', text)
+    text = re.sub(r'\\', '', text)
     return text
 
 
-def process_txt_file(file_path, output_file):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        content = file.read().replace('\n', ' ').replace('\r', ' ')
+def is_valid_sentence(sentence):
+    # Check for alphabetic content and discard purely numerical or known non-informative phrases
+    if not re.search('[a-zA-Z]', sentence):
+        return False
+    if sentence.strip().isdigit() or "Ibid." in sentence:
+        return False
+    return True
 
-    # Clean the entire content
-    cleaned_content = clean_text(content.strip())
+
+def filter_sentences(sentences, min_words=3):
+    filtered_sentences = []
+    for sentence in sentences:
+        # Splitting based on spaces to count words and checking sentence validity
+        if len(sentence.split()) >= min_words and is_valid_sentence(sentence):
+            filtered_sentences.append(sentence)
+    return filtered_sentences
+
+
+def clean_and_filter_text(content, min_words):
+    # Apply cleaning functions
+    cleaned_content = remove_unwanted_characters(content)
 
     # Splitting the cleaned content into sentences
     sentences = re.split(r'(?<=\w\.)\s', cleaned_content)
 
+    # Filter out short and invalid sentences
+    filtered_sentences = filter_sentences(sentences, min_words)
+
+    return filtered_sentences
+
+
+def process_txt_file(file_path, output_file, min_words):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        content = file.read().replace('\n', ' ').replace('\r', ' ')
+
+    # Clean and filter the content
+    filtered_sentences = clean_and_filter_text(content.strip(), min_words)
+
     # Write each sentence as a separate object in a .jsonl file
     with jsonlines.open(output_file, mode='w') as writer:
-        for sentence in tqdm(sentences, desc="Writing sentences"):
+        for sentence in tqdm(filtered_sentences, desc="Writing sentences"):
             writer.write({"text": sentence})
 
 
+def main():
+    parser = argparse.ArgumentParser(
+        description='Clean and filter text, and write sentences to a JSONL file.')
+    parser.add_argument('txt_file_path', type=str,
+                        help='Path to the input text file.')
+    parser.add_argument('jsonl_output_file', type=str,
+                        help='Path to the output JSONL file.')
+    parser.add_argument('-n', '--min_words', type=int, default=3,
+                        help='Minimum number of words in a sentence to include it in the output.')
+
+    args = parser.parse_args()
+
+    process_txt_file(args.txt_file_path,
+                     args.jsonl_output_file, args.min_words)
+
+
 if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) != 3:
-        print("Usage: python script.py <input_txt_file> <output_jsonl_file>")
-        sys.exit(1)
-
-    txt_file_path = sys.argv[1]
-    jsonl_output_file = sys.argv[2]
-
-    process_txt_file(txt_file_path, jsonl_output_file)
-
+    main()
 
 # python textUtils.py path/to/input.txt path/to/output.jsonl
