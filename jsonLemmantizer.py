@@ -1,7 +1,7 @@
 import sys
 import os
 from tqdm import tqdm  
-from jsonl_utils_package.jsonlUtil import process_jsonl_files
+from jsonl_utils_package.jsonlUtil import process_jsonl_file
 
 # Rutas predeterminadas
 JSONL_DIRECTORY = "jsonl_directory"
@@ -34,7 +34,7 @@ if __name__ == "__main__":
             # Obtener el nombre del archivo de salida
             output_file = os.path.join(output_dir, os.path.basename(jsonl_file))
             # Procesar el archivo JSONL y guardar el resultado en el directorio de salida
-            process_jsonl_files(jsonl_file, output_file)
+            process_jsonl_file(jsonl_file, output_file)
     
     else:
         print("Error: The input path provided is not a directory.")
