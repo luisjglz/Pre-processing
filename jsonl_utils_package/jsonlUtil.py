@@ -6,27 +6,31 @@ import os
 # Cargar el modelo de spaCy
 nlp = spacy.load("en_core_web_lg")
 
-# Función para lematizar un texto dado
-def lemmatize_text(text):
+# Obtener las stopwords de spaCy
+stopwords = spacy.lang.en.stop_words.STOP_WORDS
+
+# Función para lematizar un texto dado y eliminar stopwords
+def lemmatize_and_remove_stopwords(text):
+    # Procesar el texto con spaCy
     doc = nlp(text)
-    lemmatized_text = ' '.join([token.lemma_ for token in doc])
+    # Obtener los lemas y eliminar stopwords
+    lemmatized_text = ' '.join([token.lemma_ for token in doc if not token.is_stop and token.is_alpha])
     return lemmatized_text
 
-# Función para procesar un archivo JSONL línea por línea
-def process_jsonl_file(input_file, output_file):
-    # Abrir el archivo de entrada
+# Función para procesar archivos JSONL
+def process_jsonl_files(input_file, output_file):
+    # Lista para almacenar datos procesados
+    processed_data = []
+    
     with open(input_file, "r") as f_in:
-        # Abrir el archivo de salida
-        with open(output_file, "w") as f_out:
-            # Procesar cada línea del archivo de entrada
-            for line in f_in:
-                # Cargar la línea JSON
-                data = json.loads(line)
-                # Obtener el texto del campo "text"
-                text = data.get("text", "")
-                # Lematizar el texto
-                lemmatized_text = lemmatize_text(text)
-                # Reemplazar el texto original con el texto lematizado
-                data["text"] = lemmatized_text
-                # Escribir la línea procesada en el archivo de salida
-                f_out.write(json.dumps(data) + "\n")
+        for line in f_in:
+            data = json.loads(line)
+            text = data.get("text", "")
+            lemmatized_text = lemmatize_and_remove_stopwords(text)
+            data["text"] = lemmatized_text  # Reemplazar el campo "text" con el texto lematizado y sin stopwords
+            processed_data.append(data)
+    
+    # Escribir los datos procesados en el archivo de salida
+    with open(output_file, "w") as f_out:
+        for data in processed_data:
+            f_out.write(json.dumps(data) + "\n")
